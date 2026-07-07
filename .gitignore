@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .venv/
 venv/
@@ -7,4 +7,3 @@ models/*.pt
 mlruns/
 gcp-key.json
 .env
-!data/mini_sample/test.jpg
