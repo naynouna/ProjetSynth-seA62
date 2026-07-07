@@ -7,3 +7,4 @@ models/*.pt
 mlruns/
 gcp-key.json
 .env
+!data/mini_sample/test.jpg
