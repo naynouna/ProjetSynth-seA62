@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 
-MODEL_PATH = "yolov8n-seg.pt"
+MODEL_PATH = "yolov8m-seg.pt"
 
 def predict(image_path):
     model = YOLO(MODEL_PATH)
