@@ -11,6 +11,12 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install -r requirements.txt
+      - name: Authentification Google Cloud
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > gcp-creds.json
+      - name: Recuperer les donnees DVC
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: gcp-creds.json
+        run: dvc pull
       - run: pytest tests/ -v
 
   docker-build:
