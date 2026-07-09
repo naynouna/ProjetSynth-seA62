@@ -8,3 +8,5 @@ models/*.pt
 mlruns/
 gcp-key.json
 .env
+mlflow.db
+mlruns/
