@@ -25,6 +25,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Connexion au registre GitHub
@@ -35,3 +36,12 @@ jobs:
         run: docker run ghcr.io/naynouna/projetsynth-sea62:latest
       - name: Publication sur le registre
         run: docker push ghcr.io/naynouna/projetsynth-sea62:latest
+      - name: Authentification Google Cloud (sans cle)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - name: Configuration de gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Deploiement automatique sur Cloud Run
+        run: gcloud run deploy pneumoscan-ia --image=ghcr.io/naynouna/projetsynth-sea62:latest --region=northamerica-northeast1 --platform=managed --allow-unauthenticated --port=5000 --command=python --args=-m,src.api.app
