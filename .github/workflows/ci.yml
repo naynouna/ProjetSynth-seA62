@@ -22,9 +22,16 @@ jobs:
   docker-build:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+      - name: Connexion au registre GitHub
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build de l'image Docker
-        run: docker build -t pneumoscan-ia .
+        run: docker build -t ghcr.io/naynouna/projetsynth-sea62:latest .
       - name: Test dans le conteneur
-        run: docker run pneumoscan-ia
+        run: docker run ghcr.io/naynouna/projetsynth-sea62:latest
+      - name: Publication sur le registre
+        run: docker push ghcr.io/naynouna/projetsynth-sea62:latest
