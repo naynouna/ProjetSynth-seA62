@@ -28,12 +28,22 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install dvc[gs]
+      - name: Authentification Google Cloud
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > gcp-creds.json
+      - name: Recuperer les donnees DVC
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: gcp-creds.json
+        run: dvc pull
       - name: Connexion au registre GitHub
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build de l'image Docker
         run: docker build -t ghcr.io/naynouna/projetsynth-sea62:latest .
       - name: Test dans le conteneur
-        run: docker run ghcr.io/naynouna/projetsynth-sea62:latest
+        run: docker run -v ${{ github.workspace }}/data:/app/data ghcr.io/naynouna/projetsynth-sea62:latest
       - name: Publication sur le registre
         run: docker push ghcr.io/naynouna/projetsynth-sea62:latest
       - name: Authentification Google Cloud (sans cle)
