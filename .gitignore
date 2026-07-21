@@ -10,3 +10,6 @@ gcp-key.json
 .env
 mlflow.db
 mlruns/
+
+mlflow.db
+*.pt
