@@ -9,7 +9,7 @@ PAGE = """
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>PneumoScan IA</title>
+<title>PneumoScan</title>
 <style>
   body {
     font-family: -apple-system, Segoe UI, Arial, sans-serif;
@@ -21,7 +21,6 @@ PAGE = """
     align-items: center;
     padding: 50px 20px;
   }
-  .logo { font-size: 48px; }
   h1 { margin: 10px 0 5px; font-size: 28px; }
   p.subtitle { color: #9AA6C4; margin-top: 0; }
   .card {
@@ -69,12 +68,10 @@ PAGE = """
   .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
   .badge.oui { background: #B14328; }
   .badge.non { background: #2E8B57; }
-  footer { margin-top: 40px; color: #6b7690; font-size: 12px; }
 </style>
 </head>
 <body>
-  <div class="logo">&#129749;</div>
-  <h1>PneumoScan IA</h1>
+  <h1>PneumoScan</h1>
   <p class="subtitle">Analyse automatique de radiographies thoraciques</p>
 
   <div class="card">
@@ -86,8 +83,6 @@ PAGE = """
     <button id="submitBtn" disabled>Analyser l'image</button>
     <div id="result"></div>
   </div>
-
-  <footer>YOLOv8m-seg &middot; pipeline CI/CD automatise</footer>
 
 <script>
 const dropzone = document.getElementById('dropzone');
