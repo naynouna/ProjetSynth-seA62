@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    command: python -m src.api.app
+
+  mlflow-ui:
+    build: .
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./mlflow_store:/app/mlflow_store
+    command: mlflow ui --backend-store-uri sqlite:///mlflow_store/mlflow.db --host 0.0.0.0 --port 5001

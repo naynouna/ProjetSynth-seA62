@@ -1,7 +1,7 @@
 import mlflow
 from src.predict import predict
 
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
+mlflow.set_tracking_uri("sqlite:///mlflow_store/mlflow.db")
 mlflow.set_experiment("pneumoscan-predictions")
 
 with mlflow.start_run():

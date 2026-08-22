@@ -16,7 +16,7 @@ jobs:
       - name: Recuperer les donnees de test DVC
         env:
           GOOGLE_APPLICATION_CREDENTIALS: gcp-creds.json
-        run: dvc pull data/dvc_sample.dvc
+        run: dvc pull data/dvc_sample.dvc models/best.pt.dvc
       - run: pytest tests/ -v
 
   docker-build:
@@ -37,7 +37,7 @@ jobs:
       - name: Recuperer les donnees de test DVC
         env:
           GOOGLE_APPLICATION_CREDENTIALS: gcp-creds.json
-        run: dvc pull data/dvc_sample.dvc
+        run: dvc pull data/dvc_sample.dvc models/best.pt.dvc
       - name: Connexion au registre GitHub
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build de l'image Docker
