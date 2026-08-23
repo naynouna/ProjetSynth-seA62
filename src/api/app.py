@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template_string
 from src.predict import predict
 import os
+import base64
+from PIL import Image, ImageDraw
 
 app = Flask(__name__)
 
@@ -26,6 +28,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .badge.oui { background: #B14328; }
 .badge.non { background: #2E8B57; }
+.note { font-size: 11px; color: #9AA6C4; margin-top: 10px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -69,10 +72,13 @@ submitBtn.addEventListener('click', async () => {
   try {
     const res = await fetch('/predict', { method: 'POST', body: formData });
     const data = await res.json();
+    if (data.image_annotee) {
+      preview.src = 'data:image/png;base64,' + data.image_annotee;
+    }
     const badge = data.masque_detecte
       ? '<span class="badge oui">Zone d\u00e9tect\u00e9e</span>'
       : '<span class="badge non">Aucune zone</span>';
-    resultBox.innerHTML = '<strong>R\u00e9sultat</strong><br>Zone d\u00e9tect\u00e9e : ' + badge + '<br>Objets d\u00e9tect\u00e9s : ' + data.nb_objets_detectes;
+    resultBox.innerHTML = '<strong>R\u00e9sultat</strong><br>Statut : ' + badge + '<br>Objets d\u00e9tect\u00e9s : ' + data.nb_objets_detectes + '<div class="note">Les rectangles rouges montrent les zones d\u00e9tect\u00e9es par le mod\u00e8le.</div>';
     resultBox.style.display = 'block';
   } catch (err) {
     resultBox.innerHTML = "Erreur lors de l'analyse.";
@@ -97,10 +103,30 @@ def predict_route():
     fichier = request.files["image"]
     chemin_temp = "temp_upload.jpg"
     fichier.save(chemin_temp)
+
     resultats = predict(chemin_temp)
     masque_detecte = len(resultats[0].boxes) > 0
+
+    img = Image.open(chemin_temp).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    for boite in resultats[0].boxes:
+        x1, y1, x2, y2 = boite.xyxy[0].tolist()
+        confiance = float(boite.conf[0])
+        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+        draw.text((x1, max(0, y1 - 15)), f"{confiance:.2f}", fill="red")
+
+    from io import BytesIO
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    image_annotee = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
     os.remove(chemin_temp)
-    return jsonify({"masque_detecte": masque_detecte, "nb_objets_detectes": len(resultats[0].boxes)})
+
+    return jsonify({
+        "masque_detecte": masque_detecte,
+        "nb_objets_detectes": len(resultats[0].boxes),
+        "image_annotee": image_annotee
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
