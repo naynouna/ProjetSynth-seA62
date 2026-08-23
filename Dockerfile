@@ -18,5 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY tests/ ./tests/
 COPY pytest.ini .
+COPY models/ ./models/
 
 CMD ["pytest", "tests/", "-v"]
