@@ -1,0 +1,82 @@
+name: Mise a jour du modele depuis Kaggle
+
+on:
+  workflow_dispatch:
+    inputs:
+      kaggle_notebook:
+        description: "Identifiant Kaggle (utilisateur/notebook)"
+        required: true
+        default: "imenbenyahia1983/notebook196e21a08e"
+      seuil_map_minimum:
+        description: "mAP50 minimum requis pour accepter le nouveau modele"
+        required: true
+        default: "0.40"
+
+jobs:
+  update-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - run: pip install kaggle pandas "dvc[gs]"
+
+      - name: Recuperer le contenu depuis Kaggle
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          kaggle kernels output ${{ github.event.inputs.kaggle_notebook }} -p kaggle_download
+
+      - name: Verifier le score avant d'accepter le modele
+        run: |
+          python -c "
+          import pandas as pd, glob, sys
+
+          fichiers = glob.glob('kaggle_download/**/metriques_finales*.csv', recursive=True)
+          if not fichiers:
+              fichiers = glob.glob('kaggle_download/**/balayage_seuil*.csv', recursive=True)
+          if not fichiers:
+              print('AUCUN FICHIER DE METRIQUES TROUVE - rejet par securite')
+              sys.exit(1)
+
+          df = pd.read_csv(fichiers[0])
+          colonne_map = [c for c in df.columns if 'map' in c.lower()]
+          meilleur_map = df[colonne_map[0]].max()
+          seuil = float('${{ github.event.inputs.seuil_map_minimum }}')
+
+          print(f'Meilleur mAP50 trouve : {meilleur_map}')
+          print(f'Seuil minimum requis : {seuil}')
+
+          if meilleur_map < seuil:
+              print('REJETE : le nouveau modele est moins bon que le seuil. Le modele en production n est PAS modifie.')
+              sys.exit(1)
+          else:
+              print('ACCEPTE : le nouveau modele atteint le seuil requis.')
+          "
+
+      - name: Copier le modele valide au bon endroit
+        run: |
+          find kaggle_download -name "best.pt" -exec cp {} models/best.pt \;
+          ls -la models/
+
+      - name: Authentification Google Cloud
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > gcp-creds.json
+
+      - name: Versionner avec DVC et pousser
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: gcp-creds.json
+        run: |
+          dvc add models/best.pt
+          dvc push
+
+      - name: Commit et push du pointeur
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add models/best.pt.dvc
+          git commit -m "auto: modele mis a jour depuis Kaggle (mAP verifie >= seuil)" || echo "Rien a committer"
+          git push
